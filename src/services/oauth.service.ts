@@ -15,11 +15,13 @@ export const oauthService = {
 
   async findOrCreateWechatUser(profile: {
     openid: string;
+    unionid?: string;
     nickname?: string;
     headimgurl?: string;
   }): Promise<User> {
     const oauthProfile: OAuthProfile = {
-      providerId: profile.openid,
+      // 优先用 unionid（跨应用唯一），没有则降级用 openid
+      providerId: profile.unionid || profile.openid,
       name: profile.nickname || profile.openid,
       avatar: profile.headimgurl,
     };

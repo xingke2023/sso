@@ -5,22 +5,30 @@ import { oauthAccountModel } from '../models/oauth-account.model';
 import { AppError } from '../middleware/error.middleware';
 
 export const userService = {
-  async register(email: string, password: string, name: string): Promise<User> {
-    const existing = await userModel.findByEmail(email);
-    if (existing) throw new AppError('EMAIL_TAKEN', 409, '该邮箱已被注册');
+  async register(username: string, password: string, name?: string, email?: string): Promise<User> {
+    const existingUsername = await userModel.findByUsername(username);
+    if (existingUsername) throw new AppError('USERNAME_TAKEN', 409, '该用户名已被占用');
+    if (email) {
+      const existing = await userModel.findByEmail(email);
+      if (existing) throw new AppError('EMAIL_TAKEN', 409, '该邮箱已被注册');
+    }
 
     const password_hash = await bcrypt.hash(password, 12);
-    return userModel.create({ email, password_hash, name });
+    return userModel.create({ email, username, password_hash, name: name ?? '' });
   },
 
-  async login(email: string, password: string): Promise<User> {
-    const user = await userModel.findByEmail(email);
+  async login(identifier: string, password: string): Promise<User> {
+    const isEmail = identifier.includes('@');
+    const user = isEmail
+      ? await userModel.findByEmail(identifier)
+      : await userModel.findByUsername(identifier);
+
     if (!user || !user.password_hash) {
-      throw new AppError('INVALID_CREDENTIALS', 401, '邮箱或密码错误');
+      throw new AppError('INVALID_CREDENTIALS', 401, '账号或密码错误');
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) throw new AppError('INVALID_CREDENTIALS', 401, '邮箱或密码错误');
+    if (!valid) throw new AppError('INVALID_CREDENTIALS', 401, '账号或密码错误');
 
     return user;
   },

@@ -19,10 +19,18 @@ export const userModel = {
     return (rows[0] as User) ?? null;
   },
 
+  async findByUsername(username: string): Promise<User | null> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT * FROM users WHERE username = ?',
+      [username]
+    );
+    return (rows[0] as User) ?? null;
+  },
+
   async create(data: CreateUserInput): Promise<User> {
     const [result] = await pool.query<ResultSetHeader>(
-      'INSERT INTO users (email, password_hash, name, avatar) VALUES (?, ?, ?, ?)',
-      [data.email ?? null, data.password_hash ?? null, data.name, data.avatar ?? null]
+      'INSERT INTO users (email, username, password_hash, name, avatar) VALUES (?, ?, ?, ?, ?)',
+      [data.email ?? null, data.username ?? null, data.password_hash ?? null, data.name, data.avatar ?? null]
     );
     return (await this.findById(result.insertId))!;
   },

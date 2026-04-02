@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import passport from '../config/passport';
 import { handleGoogleCallback, handleWechatCallback } from '../controllers/oauth.controller';
 
@@ -12,8 +12,14 @@ router.get(
   handleGoogleCallback
 );
 
-// 微信 OAuth
-router.get('/wechat', passport.authenticate('wechat', { session: false }));
+// 微信 OAuth：支持 ?redirect_uri=https://your-app.com/callback
+router.get('/wechat', (req: Request, res: Response, next: NextFunction) => {
+  const redirectUri = req.query.redirect_uri as string | undefined;
+  const state = redirectUri
+    ? Buffer.from(redirectUri).toString('base64url')
+    : 'default';
+  passport.authenticate('wechat', { session: false, state })(req, res, next);
+});
 router.get(
   '/wechat/callback',
   passport.authenticate('wechat', { session: false, failureRedirect: '/api/oauth/failure' }),

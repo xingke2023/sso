@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   email: string | null;
+  username: string | null;
   password_hash: string | null;
   name: string;
   avatar: string | null;
@@ -48,6 +49,7 @@ export interface ApiResponse<T = unknown> {
 
 export interface CreateUserInput {
   email?: string;
+  username?: string;
   password_hash?: string;
   name: string;
   avatar?: string;
