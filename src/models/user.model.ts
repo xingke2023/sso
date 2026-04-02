@@ -30,7 +30,7 @@ export const userModel = {
   async create(data: CreateUserInput): Promise<User> {
     const [result] = await pool.query<ResultSetHeader>(
       'INSERT INTO users (email, username, password_hash, name, avatar) VALUES (?, ?, ?, ?, ?)',
-      [data.email ?? null, data.username ?? null, data.password_hash ?? null, data.name, data.avatar ?? null]
+      [data.email ?? null, data.username ?? null, data.password_hash ?? null, data.name ?? '', data.avatar ?? null]
     );
     return (await this.findById(result.insertId))!;
   },

@@ -41,7 +41,8 @@ if (process.env.WECHAT_APP_ID) {
       async (
         _accessToken: string,
         _refreshToken: string,
-        profile: { openid: string; nickname?: string; headimgurl?: string },
+        profile: { openid: string; unionid?: string; nickname?: string; headimgurl?: string },
+        _expiresIn: number,
         done: (err: Error | null, user?: Express.User) => void
       ) => {
         try {
