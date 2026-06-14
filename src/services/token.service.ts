@@ -10,7 +10,7 @@ function sha256(data: string): string {
 }
 
 function toPayload(user: User): JwtPayload {
-  return { userId: user.id, email: user.email, name: user.name, avatar: user.avatar };
+  return { userId: user.id, username: user.username, email: user.email, name: user.name, avatar: user.avatar };
 }
 
 export const tokenService = {

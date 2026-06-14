@@ -56,4 +56,35 @@ if (process.env.WECHAT_APP_ID) {
   );
 }
 
+// 微信公众号网页授权 Strategy（snsapi_userinfo，适用于微信内置浏览器）
+if (process.env.WECHAT_MP_APP_ID) {
+  passport.use(
+    'wechat-mp',
+    new WechatStrategy(
+      {
+        appID: process.env.WECHAT_MP_APP_ID,
+        appSecret: process.env.WECHAT_MP_APP_SECRET || '',
+        callbackURL: process.env.WECHAT_MP_CALLBACK_URL || 'http://localhost:8111/api/oauth/wechat-mp/callback',
+        client: 'wechat',
+        scope: 'snsapi_userinfo',
+        state: 'wechat_mp_login',
+      },
+      async (
+        _accessToken: string,
+        _refreshToken: string,
+        profile: { openid: string; unionid?: string; nickname?: string; headimgurl?: string },
+        _expiresIn: number,
+        done: (err: Error | null, user?: Express.User) => void
+      ) => {
+        try {
+          const user = await oauthService.findOrCreateWechatUser(profile);
+          done(null, user as unknown as Express.User);
+        } catch (err) {
+          done(err as Error);
+        }
+      }
+    )
+  );
+}
+
 export default passport;

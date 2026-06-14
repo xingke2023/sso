@@ -28,6 +28,7 @@ export interface RefreshToken {
 
 export interface JwtPayload {
   userId: number;
+  username: string | null;
   email: string | null;
   name: string;
   avatar: string | null;
