@@ -13,7 +13,7 @@ const app = express();
 const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
 const wildcardPatterns = allowedOrigins
   .filter((o) => o.startsWith('*.'))
-  .map((o) => new RegExp('^https?://' + o.slice(2).replace(/\./g, '\\.') + '$'));
+  .map((o) => new RegExp('^https?://[^.]+\\.' + o.slice(2).replace(/\./g, '\\.') + '$'));
 const exactOrigins = new Set(allowedOrigins.filter((o) => !o.startsWith('*.')));
 
 app.use(
@@ -60,6 +60,76 @@ app.get('/docs', (_req, res) => {
 </head>
 <body>${html}</body>
 </html>`);
+});
+
+// OAuth 回调落地页（网页授权成功后重定向至此，token 写入 localStorage）
+app.get('/oauth/callback', (req, res) => {
+  const { accessToken, refreshToken, error } = req.query as Record<string, string>;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录中...</title>
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;
+           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; }
+    .card { background: #fff; border-radius: 12px; padding: 40px 48px; text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,.08); }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    h2 { margin: 0 0 8px; font-size: 20px; color: #111; }
+    p  { margin: 0; color: #666; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="card" id="box">
+  <div class="icon">⏳</div>
+  <h2>登录处理中</h2>
+  <p>请稍候...</p>
+</div>
+<script>
+  (function () {
+    var accessToken  = ${JSON.stringify(accessToken  || '')};
+    var refreshToken = ${JSON.stringify(refreshToken || '')};
+    var error        = ${JSON.stringify(error        || '')};
+    var box = document.getElementById('box');
+
+    if (error) {
+      box.innerHTML = '<div class="icon">❌</div><h2>登录失败</h2><p>' + error + '</p>';
+      return;
+    }
+
+    if (accessToken) {
+      try { localStorage.setItem('sso_access_token',  accessToken);  } catch(_) {}
+      try { localStorage.setItem('sso_refresh_token', refreshToken); } catch(_) {}
+    }
+
+    // 优先通知父窗口（弹窗模式）
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(
+        { type: 'SSO_LOGIN_SUCCESS', accessToken: accessToken, refreshToken: refreshToken },
+        '*'
+      );
+      window.close();
+      return;
+    }
+
+    // 普通跳转模式：带 token 跳转到前端
+    box.innerHTML = '<div class="icon">✅</div><h2>登录成功</h2><p>正在跳转...</p>';
+    var dest = new URL('https://demo1.xingke888.com/image');
+    if (accessToken)  dest.searchParams.set('accessToken',  accessToken);
+    if (refreshToken) dest.searchParams.set('refreshToken', refreshToken);
+    setTimeout(function () { window.location.href = dest.toString(); }, 800);
+  })();
+</script>
+</body>
+</html>`);
+});
+
+// 微信域名校验
+app.get('/ub10b8eAJx.txt', (_req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.send('a986bf035c42edc98f14fb0cb58fb9b8');
 });
 
 app.use(errorHandler);

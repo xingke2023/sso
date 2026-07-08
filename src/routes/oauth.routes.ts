@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import passport from '../config/passport';
 import { handleGoogleCallback, handleWechatCallback } from '../controllers/oauth.controller';
+import { loginWithMiniapp } from '../controllers/wechat-miniapp.controller';
 
 const router = Router();
 
@@ -39,6 +40,9 @@ router.get(
   passport.authenticate('wechat-mp', { session: false, failureRedirect: '/api/oauth/failure' }),
   handleWechatCallback
 );
+
+// 微信小程序登录（code 换 JWT）
+router.post('/wechat-miniapp', loginWithMiniapp);
 
 // OAuth 失败回调
 router.get('/failure', (_req, res) => {

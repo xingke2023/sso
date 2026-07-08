@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { userService } from '../services/user.service';
+import { userModel } from '../models/user.model';
 import { tokenService } from '../services/token.service';
 import { validate } from '../middleware/validate.middleware';
+import { JwtPayload } from '../types';
 
 const registerSchema = z.object({
   email: z.string().email('请输入有效邮箱').optional(),
@@ -50,6 +52,34 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         user: { id: user.id, email: user.email, username: user.username, name: user.name, avatar: user.avatar },
       },
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+const updateMeSchema = z.object({
+  name:   z.string().min(1).max(100).optional(),
+  avatar: z.string().url().max(500).optional(),
+});
+export const updateMeValidator = validate(updateMeSchema);
+
+export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { userId } = req.user as JwtPayload;
+    const user = await userModel.findById(userId);
+    if (!user) { res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: '用户不存在' } }); return; }
+    res.json({ success: true, data: { user: { id: user.id, email: user.email, username: user.username, name: user.name, avatar: user.avatar } } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { userId } = req.user as JwtPayload;
+    const { name, avatar } = req.body as { name?: string; avatar?: string };
+    const user = await userModel.update(userId, { name, avatar });
+    res.json({ success: true, data: { user: { id: user.id, email: user.email, username: user.username, name: user.name, avatar: user.avatar } } });
   } catch (err) {
     next(err);
   }

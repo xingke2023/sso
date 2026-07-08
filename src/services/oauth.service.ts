@@ -20,11 +20,18 @@ export const oauthService = {
     headimgurl?: string;
   }): Promise<User> {
     const oauthProfile: OAuthProfile = {
-      // 优先用 unionid（跨应用唯一），没有则降级用 openid
       providerId: profile.unionid || profile.openid,
       name: profile.nickname || profile.openid,
       avatar: profile.headimgurl,
     };
     return userService.findOrCreateOAuthUser('wechat', oauthProfile);
+  },
+
+  async findOrCreateWechatMiniappUser(openid: string, unionid?: string): Promise<User> {
+    const oauthProfile: OAuthProfile = {
+      providerId: unionid || openid,
+      name: `wx_${openid.slice(-6)}`,
+    };
+    return userService.findOrCreateOAuthUser('wechat_miniapp', oauthProfile);
   },
 };

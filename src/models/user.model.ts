@@ -34,4 +34,16 @@ export const userModel = {
     );
     return (await this.findById(result.insertId))!;
   },
+
+  async update(id: number, data: { name?: string; avatar?: string }): Promise<User> {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    if (data.name  !== undefined) { fields.push('name = ?');   values.push(data.name); }
+    if (data.avatar !== undefined) { fields.push('avatar = ?'); values.push(data.avatar); }
+    if (fields.length) {
+      values.push(id);
+      await pool.query<ResultSetHeader>(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+    }
+    return (await this.findById(id))!;
+  },
 };

@@ -12,7 +12,7 @@ export interface User {
 export interface OAuthAccount {
   id: number;
   user_id: number;
-  provider: 'google' | 'wechat';
+  provider: 'google' | 'wechat' | 'wechat_miniapp';
   provider_id: string;
   created_at: Date;
 }

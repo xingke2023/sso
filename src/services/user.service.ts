@@ -34,7 +34,7 @@ export const userService = {
   },
 
   async findOrCreateOAuthUser(
-    provider: 'google' | 'wechat',
+    provider: 'google' | 'wechat' | 'wechat_miniapp',
     profile: OAuthProfile
   ): Promise<User> {
     const oauthAccount = await oauthAccountModel.findByProvider(provider, profile.providerId);
